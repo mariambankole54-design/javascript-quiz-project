@@ -89,114 +89,103 @@ document.addEventListener("DOMContentLoaded"), () => {
 
     // Get the current question from the quiz by calling the Quiz class method `getQuestion()`
     const question = quiz.getQuestion();
+    
     // Shuffle the choices of the current question by calling the method 'shuffleChoices()' on the question object
     question.shuffleChoices();
 
-    function showQuestion() {
-  const question = quiz.getQuestion();
-  questionContainer.textContent = question.text;
-  const progress = ((quiz.currentQuestionIndex + 1) / quiz.questions.length) * 100;
-  progressBar.style.width = `${progress}%`;
-  questionCounter.textContent = `Question ${quiz.currentQuestionIndex + 1} of ${quiz.questions.length}`;
-  choiceContainer.innerHTML = '';
-  question.choices.forEach((choice, index) => {
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'choice';
-    radio.id = `choice-${index}`;
-    radio.value = choice;
-    const label = document.createElement('label');
-    label.htmlFor = `choice-${index}`;
-    label.textContent = choice;
-
-    const choiceDiv = document.createElement('div');
-    choiceDiv.classList.add('choice');
-    choiceDiv.appendChild(radio);
-    choiceDiv.appendChild(label);
+    // Update the green progress bar
+    const progressPercentage = ((quiz.currentQuestionIndex + 1) / quiz.questions.length) * 100;
+    progressBar.style.width = `${progressPercentage}%`;
     
-    choiceContainer.appendChild(choiceDiv);
-  });
-}
-    
+    // Update the question count text
     questionCount.innerText = `Question ${quiz.currentQuestionIndex + 1} of ${quiz.questions.length}`;
 
+    // Display the question text
+    questionContainer.innerText = question.text;
+
+    // Create and display new radio input with a label for each choice
+    question.choices.forEach((choice, index) => {
+      // Create radio input element
+      const radioInput = document.createElement("input");
+      radioInput.type = "radio";
+      radioInput.name = "choice";
+      radioInput.id = `choice${index}`;
+      radioInput.value = choice;
+      
+      // Create label element
+      const label = document.createElement("label");
+      label.htmlFor = `choice${index}`;
+      label.innerText = choice;
+      
+      // Create a div to contain the radio and label
+      const choiceDiv = document.createElement("div");
+      choiceDiv.classList.add("choice");
+      choiceDiv.appendChild(radioInput);
+      choiceDiv.appendChild(label);
+      
+      // Add the choice to the choice container
+      choiceContainer.appendChild(choiceDiv);
+    });
   }
 
-    let selectedAnswer; // A variable to store the selected answer value
-    function nextButtonHandler() {
-  // Get all radio inputs
-  const choices = document.querySelectorAll('input[name="choice"]');
-  let selectedAnswer = null;
-  
-  // Find selected answer
-  choices.forEach(choice => {
-    if (choice.checked) {
-      selectedAnswer = choice.value;
-    }
-  });
-  
-  // If answer selected
-  if (selectedAnswer !== null) {
-    // Check if correct
-    quiz.checkAnswer(selectedAnswer);
+  function nextButtonHandler() {
+    const choiceElements = document.querySelectorAll('input[name="choice"]');
+    let selectedAnswer = null;
     
-    // Move to next question
-    quiz.moveToNextQuestion();
+    choiceElements.forEach(choiceElement => {
+      if (choiceElement.checked) {
+        selectedAnswer = choiceElement.value;
+      }
+    });
     
-    if (quiz.hasEnded()) {
-      showResults();
-    } else {
+    if (selectedAnswer !== null) {
+      quiz.checkAnswer(selectedAnswer);
+      quiz.moveToNextQuestion();
       showQuestion();
+    } else {
+      alert("Please select an answer before proceeding!");
     }
-  } else {
-    alert('Please select an answer!');
-  }
-}
   }
 
-function showResults() {
-  quizView.style.display = 'none';
-  endView.style.display = 'block';
-  const score = document.getElementById('score');
-  score.textContent = `${quiz.correctAnswers} out of ${quiz.questions.length}`;
-}
+  function showResults() {
+    quizView.style.display = "none";
+    endView.style.display = "flex";
+    resultContainer.innerText = `You scored ${quiz.correctAnswers} out of ${quiz.questions.length} correct answers!`;
+    clearInterval(timer);
+  }
 
-let timer;
+  function startTimer() {
+    timer = setInterval(() => {
+      quiz.timeRemaining--;
+      
+      const minutes = Math.floor(quiz.timeRemaining / 60).toString().padStart(2, "0");
+      const seconds = (quiz.timeRemaining % 60).toString().padStart(2, "0");
+      timeRemainingContainer.innerText = `${minutes}:${seconds}`;
+      
+      if (quiz.timeRemaining <= 0) {
+        clearInterval(timer);
+        showResults();
+      }
+    }, 1000);
+  }
 
-function startTimer() {
-  timer = setInterval(() => {
-    quiz.timeRemaining--;
+  function resetQuizHandler() {
+    endView.style.display = "none";
+    quizView.style.display = "block";
+    
+    quiz.currentQuestionIndex = 0;
+    quiz.correctAnswers = 0;
+    quiz.timeRemaining = quiz.timeLimit;
     
     const minutes = Math.floor(quiz.timeRemaining / 60).toString().padStart(2, "0");
     const seconds = (quiz.timeRemaining % 60).toString().padStart(2, "0");
     timeRemainingContainer.innerText = `${minutes}:${seconds}`;
     
-    if (quiz.timeRemaining <= 0) {
-      clearInterval(timer);
-      showResults();
-    }
-  }, 1000);
-}
-
-function showResults() {
-  clearInterval(timer);
-  
-  quizView.style.display = "none";
-  endView.style.display = "flex";
-  resultContainer.innerText = `You scored ${quiz.correctAnswers} out of ${quiz.questions.length} correct answers!`;
-}
-
-function resetQuizHandler() {
-  clearInterval(timer);
-  
-  quiz.currentQuestionIndex = 0;
-  quiz.correctAnswers = 0;
-  quiz.timeRemaining = quiz.timeLimit;
-  
-  const minutes = Math.floor(quiz.timeRemaining / 60).toString().padStart(2, "0");
-  const seconds = (quiz.timeRemaining % 60).toString().padStart(2, "0");
-  timeRemainingContainer.innerText = `${minutes}:${seconds}`;
-  
-  startTimer();
-  showQuestion();
-}
+    quiz.shuffleQuestions();
+    
+    clearInterval(timer);
+    startTimer();
+    
+    showQuestion();
+  }
+}; 
