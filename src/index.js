@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded"), () => {
+document.addEventListener("DOMContentLoaded", () => {
   /************  HTML ELEMENTS  ************/
   // View divs
   const quizView = document.querySelector("#quizView");
@@ -160,6 +160,8 @@ document.addEventListener("DOMContentLoaded"), () => {
       
       const minutes = Math.floor(quiz.timeRemaining / 60).toString().padStart(2, "0");
       const seconds = (quiz.timeRemaining % 60).toString().padStart(2, "0");
+
+      const timeRemainingContainer = document.getElementById("timeRemaining");
       timeRemainingContainer.innerText = `${minutes}:${seconds}`;
       
       if (quiz.timeRemaining <= 0) {
@@ -188,4 +190,4 @@ document.addEventListener("DOMContentLoaded"), () => {
     
     showQuestion();
   }
-}; 
+});
